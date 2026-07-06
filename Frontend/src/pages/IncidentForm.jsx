@@ -4,10 +4,17 @@ import { api } from '../services/api';
 
 export default function IncidentForm() {
   const [remarks, setRemarks] = useState('');
+  const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [checks, setChecks] = useState({ safe: false, emergency: false, anonymous: false });
   const navigate = useNavigate();
+
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+    }
+  };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -18,7 +25,7 @@ export default function IncidentForm() {
         latitude: 40.7128,
         longitude: -74.0060,
         address: '40.7128° N, 74.0060° W',
-        images: [] // Future: attach actual files from drag & drop
+        images: images
       });
       setIsSubmitted(true);
       setTimeout(() => navigate('/report/confirmation'), 1500);
@@ -129,16 +136,17 @@ export default function IncidentForm() {
           <section className="bg-white border-2 border-outline-variant p-6 rounded-xl">
             <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-primary filled-icon">cloud_upload</span>
-              <h2 className="font-sans" style={{ fontSize: '24px', lineHeight: '32px', fontWeight: 600 }}>Upload Photo/Video</h2>
+              <h2 className="font-sans" style={{ fontSize: '24px', lineHeight: '32px', fontWeight: 600 }}>Upload Photo</h2>
             </div>
-            <div className="border-2 border-dashed border-outline-variant rounded-xl p-10 flex flex-col items-center justify-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer group">
+            <label htmlFor="photo-upload" className="border-2 border-dashed border-outline-variant rounded-xl p-10 flex flex-col items-center justify-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors cursor-pointer group">
               <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors mb-4" style={{ fontSize: '48px' }}>add_a_photo</span>
               <p className="font-sans text-on-surface mb-1 text-center" style={{ fontSize: '24px', lineHeight: '32px', fontWeight: 600 }}>Drag &amp; Drop visual evidence</p>
-              <p className="text-on-surface-variant font-sans text-center" style={{ fontSize: '16px', lineHeight: '24px' }}>Support for JPG, PNG, MP4 (Max 50MB)</p>
-              <button className="mt-6 px-10 py-4 border-2 border-primary text-primary font-sans rounded-lg hover:bg-primary hover:text-on-primary transition-all" style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 700 }}>
-                Browse Local Files
-              </button>
-            </div>
+              <p className="text-on-surface-variant font-sans text-center" style={{ fontSize: '16px', lineHeight: '24px' }}>Support for JPG, PNG (Max 50MB)</p>
+              <div className="mt-6 px-10 py-4 border-2 border-primary text-primary font-sans rounded-lg hover:bg-primary hover:text-on-primary transition-all" style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 700 }}>
+                {images.length > 0 ? `${images.length} file(s) selected` : 'Browse Local Files'}
+              </div>
+              <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" id="photo-upload" />
+            </label>
           </section>
 
           {/* Safety Check */}

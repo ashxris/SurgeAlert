@@ -4,10 +4,17 @@ import { api } from '../services/api';
 
 export default function ReportDetails() {
   const [remarks, setRemarks] = useState('');
+  const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [safeChecks, setSafeChecks] = useState({ safe: false, witness: false });
   const navigate = useNavigate();
+
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+    }
+  };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -18,7 +25,7 @@ export default function ReportDetails() {
         latitude: 40.7128,
         longitude: -74.0060,
         address: 'Broadway & Chambers St, New York, NY',
-        images: []
+        images: images
       });
       setIsSubmitted(true);
       setTimeout(() => navigate('/report/confirmation'), 1500);
@@ -104,15 +111,16 @@ export default function ReportDetails() {
         {/* Right Column: Media & Safety */}
         <section className="md:col-span-5 lg:col-span-4 flex flex-col gap-gutter">
           {/* Upload Media */}
-          <div className="bg-surface-container-lowest border-2 border-outline-variant rounded-xl p-4 flex flex-col items-center justify-center text-center group cursor-pointer hover:border-tertiary-container transition-colors min-h-[280px]">
+          <div className="bg-surface-container-lowest border-2 border-outline-variant rounded-xl p-4 flex flex-col items-center justify-center text-center group hover:border-tertiary-container transition-colors min-h-[280px]">
             <div className="w-16 h-16 bg-tertiary-container/10 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined text-tertiary-container filled-icon" style={{ fontSize: '40px' }}>add_a_photo</span>
             </div>
-            <h3 className="font-sans text-on-surface mb-2" style={{ fontSize: '24px', lineHeight: '32px', fontWeight: 600 }}>Upload Photo/Video</h3>
+            <h3 className="font-sans text-on-surface mb-2" style={{ fontSize: '24px', lineHeight: '32px', fontWeight: 600 }}>Upload Photo</h3>
             <p className="text-on-surface-variant font-sans mb-6 px-4" style={{ fontSize: '14px' }}>Provide visual evidence to help responders prepare.</p>
-            <button className="bg-surface border-2 border-tertiary-container text-tertiary-container font-sans py-3 px-8 rounded-full hover:bg-tertiary-container hover:text-on-tertiary transition-all active:scale-95" style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 700 }}>
-              Select Files
-            </button>
+            <label htmlFor="mobile-photo-upload" className="bg-surface border-2 border-tertiary-container text-tertiary-container font-sans py-3 px-8 rounded-full hover:bg-tertiary-container hover:text-on-tertiary transition-all active:scale-95 cursor-pointer block" style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 700 }}>
+              {images.length > 0 ? `${images.length} file(s) selected` : 'Select Files'}
+            </label>
+            <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" id="mobile-photo-upload" />
           </div>
 
           {/* Safety Checklist */}
