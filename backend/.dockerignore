@@ -1,0 +1,27 @@
+# Version control
+.git
+.gitignore
+
+# Python environments
+.venv
+venv
+env
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+
+# Secrets / local config (Cloud Run injects env vars at runtime)
+.env
+firebase-credentials.json
+*.serviceaccount.json
+
+# Docs / editor / OS noise
+README.md
+.vscode
+.idea
+.DS_Store
+*.log
+
+# Docker files themselves
+.dockerignore

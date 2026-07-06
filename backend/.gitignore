@@ -1,0 +1,28 @@
+# Environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Secrets / credentials
+.env
+firebase-credentials.json
+*.serviceaccount.json
+
+# OS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+#claude
+.claude/
