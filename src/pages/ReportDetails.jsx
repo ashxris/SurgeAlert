@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 export default function ReportDetails() {
   const [remarks, setRemarks] = useState('');
@@ -8,15 +9,25 @@ export default function ReportDetails() {
   const [safeChecks, setSafeChecks] = useState({ safe: false, witness: false });
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await api.submitReport({
+        type: 'ACCIDENT', // Assume Accident based on UI
+        description: remarks || 'No description provided',
+        latitude: 40.7128,
+        longitude: -74.0060,
+        address: 'Broadway & Chambers St, New York, NY',
+        images: []
+      });
       setIsSubmitted(true);
-      setTimeout(() => {
-        navigate('/report/confirmation');
-      }, 1200);
-    }, 2000);
+      setTimeout(() => navigate('/report/confirmation'), 1500);
+    } catch (error) {
+      console.error('Submission failed', error);
+      alert('Submission failed: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

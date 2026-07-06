@@ -1,41 +1,38 @@
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
-
-const recentReports = [
-  {
-    id: 1,
-    title: 'Traffic Jam',
-    description: 'Congestion on 5th Ave due to roadwork.',
-    severity: 'CAUTION',
-    distance: '0.2mi away',
-    time: '2 mins ago',
-    badgeClass: 'bg-secondary-container text-on-secondary-container',
-    barColor: 'bg-secondary',
-  },
-  {
-    id: 2,
-    title: 'Medical Emergency',
-    description: 'First responders dispatched to Union Sq.',
-    severity: 'CRITICAL',
-    distance: '1.5mi away',
-    time: 'Just now',
-    badgeClass: 'bg-primary-container text-on-primary-container',
-    barColor: 'bg-primary',
-  },
-  {
-    id: 3,
-    title: 'Street Fair',
-    description: 'Broadway blocked for local festival.',
-    severity: 'RESOLVED',
-    distance: '0.8mi away',
-    time: '45 mins ago',
-    badgeClass: 'bg-surface-container-highest text-on-surface-variant',
-    barColor: 'bg-surface-variant',
-  },
-];
+import { useEffect, useState } from 'react';
+import { api } from '../services/api';
+import { getRelativeTime } from '../utils/time';
 
 export default function Landing() {
+  const [recentReports, setRecentReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
+    async function fetchReports() {
+      try {
+        const data = await api.getReports();
+        const formatted = data.slice(0, 3).map(r => ({
+          id: r.id,
+          title: r.type === 'ACCIDENT' ? 'Collision' : 'Traffic Issue',
+          description: r.description,
+          severity: r.type === 'ACCIDENT' ? 'CRITICAL' : 'CAUTION',
+          distance: r.location?.address || 'Unknown location',
+          time: getRelativeTime(r.created_at),
+          badgeClass: r.type === 'ACCIDENT' ? 'bg-primary-container text-on-primary-container' : 'bg-secondary-container text-on-secondary-container',
+          barColor: r.type === 'ACCIDENT' ? 'bg-primary' : 'bg-secondary',
+        }));
+        setRecentReports(formatted);
+      } catch (err) {
+        console.error('Failed to load reports:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchReports();
+  }, []);
+
+  useEffect(() => {
+    if (loading || recentReports.length === 0) return;
     const interval = setInterval(() => {
       const cards = document.querySelectorAll('.report-card');
       if (cards.length === 0) return;
@@ -46,7 +43,7 @@ export default function Landing() {
       }, 1000);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loading, recentReports]);
 
   return (
     <main className="pt-24 md:pt-8 px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto pb-24">
@@ -88,7 +85,9 @@ export default function Landing() {
           <Link to="#" className="text-primary font-sans hover:underline" style={{ fontSize: '14px', lineHeight: '20px', fontWeight: 700 }}>View Map</Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {recentReports.map((report) => (
+          {loading && <p className="text-on-surface-variant font-sans col-span-full">Loading nearby reports...</p>}
+          {!loading && recentReports.length === 0 && <p className="text-on-surface-variant font-sans col-span-full">No active reports nearby.</p>}
+          {!loading && recentReports.map((report) => (
             <div
               key={report.id}
               className="report-card bg-surface-container-lowest border-2 border-outline-variant p-4 flex flex-col justify-between h-40 relative overflow-hidden group hover:border-primary transition-colors"

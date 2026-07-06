@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 
 export default function IncidentForm() {
   const [remarks, setRemarks] = useState('');
@@ -8,13 +9,25 @@ export default function IncidentForm() {
   const [checks, setChecks] = useState({ safe: false, emergency: false, anonymous: false });
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await api.submitReport({
+        type: 'ACCIDENT', // Based on the "CRITICAL" UI
+        description: remarks || 'No description provided',
+        latitude: 40.7128,
+        longitude: -74.0060,
+        address: '40.7128° N, 74.0060° W',
+        images: [] // Future: attach actual files from drag & drop
+      });
       setIsSubmitted(true);
       setTimeout(() => navigate('/report/confirmation'), 1500);
-    }, 2000);
+    } catch (error) {
+      console.error('Submission failed', error);
+      alert('Submission failed: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

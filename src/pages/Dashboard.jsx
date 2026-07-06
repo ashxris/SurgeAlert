@@ -1,47 +1,42 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
-
-const recentReports = [
-  {
-    id: 1,
-    title: 'Active Structure Fire',
-    description: 'Smoke visible from 3rd floor. Emergency crews are currently on route to the scene. Avoid Westside Blvd.',
-    severity: 'Critical',
-    distance: '0.4 miles away',
-    time: '4m ago',
-    badgeClass: 'bg-primary text-on-primary',
-    barColor: 'bg-primary',
-    hoverBorder: 'hover:border-primary',
-  },
-  {
-    id: 2,
-    title: 'Downed Power Lines',
-    description: 'Storm damage causing hazardous conditions at 5th and Main. Utility crews notified.',
-    severity: 'Caution',
-    distance: '1.2 miles away',
-    time: '18m ago',
-    badgeClass: 'bg-secondary-container text-on-secondary-container',
-    barColor: 'bg-secondary-container',
-    hoverBorder: 'hover:border-secondary',
-  },
-  {
-    id: 3,
-    title: 'Traffic Obstruction',
-    description: 'Abandoned vehicle cleared from highway entrance. Traffic flow returned to normal.',
-    severity: 'Resolved',
-    distance: '2.5 miles away',
-    time: '1h ago',
-    badgeClass: 'bg-surface-container-highest text-on-surface-variant',
-    barColor: 'bg-outline-variant',
-    hoverBorder: '',
-    opacity: 'opacity-80',
-  },
-];
+import { useEffect, useRef, useState } from 'react';
+import { api } from '../services/api';
+import { getRelativeTime } from '../utils/time';
 
 export default function Dashboard() {
   const cardsRef = useRef([]);
+  const [recentReports, setRecentReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    async function loadReports() {
+      try {
+        const data = await api.getReports();
+        // Map API data to UI format
+        const formatted = data.map(r => ({
+          id: r.id,
+          title: r.type === 'ACCIDENT' ? 'Collision' : 'Traffic Issue',
+          description: r.description,
+          severity: r.type === 'ACCIDENT' ? 'Critical' : 'Caution', // Assume all traffic are caution for now
+          distance: r.location?.address || 'Unknown location',
+          time: getRelativeTime(r.created_at),
+          badgeClass: r.type === 'ACCIDENT' ? 'bg-primary text-on-primary' : 'bg-secondary-container text-on-secondary-container',
+          barColor: r.type === 'ACCIDENT' ? 'bg-primary' : 'bg-secondary-container',
+          hoverBorder: r.type === 'ACCIDENT' ? 'hover:border-primary' : 'hover:border-secondary',
+        }));
+        setRecentReports(formatted);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadReports();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
     const cards = cardsRef.current;
     cards.forEach((card) => {
       if (!card) return;
@@ -54,7 +49,7 @@ export default function Dashboard() {
         card.style.boxShadow = 'none';
       });
     });
-  }, []);
+  }, [loading, recentReports]);
 
   return (
     <div className="flex-grow flex flex-col min-w-0">
@@ -127,7 +122,12 @@ export default function Dashboard() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {recentReports.map((report, i) => (
+            {loading && <p className="text-on-surface-variant font-sans col-span-full">Loading live reports...</p>}
+            {error && <p className="text-error font-sans col-span-full">Error: {error}</p>}
+            {!loading && !error && recentReports.length === 0 && (
+              <p className="text-on-surface-variant font-sans col-span-full">No recent reports found.</p>
+            )}
+            {!loading && !error && recentReports.map((report, i) => (
               <div
                 key={report.id}
                 ref={(el) => (cardsRef.current[i] = el)}
